@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Circuit Breaker">
+<meta name="theme-color" content="#122B33">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Circuit Breaker — Daily Home Calisthenics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#122B33;          /* deep ocean slate */
+    --ink-soft:#3E5C66;
+    --paper:#F4F7F6;        /* sea-salt */
+    --card:#FFFFFF;
+    --sun:#F5A623;          /* first-light amber */
+    --sun-deep:#D97E00;
+    --reef:#0E7C66;         /* reef green for done states */
+    --line:#D8E2E0;
+    --danger:#B44;
+    --radius:18px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Public Sans',system-ui,sans-serif;
+    font-size:17px;
+    line-height:1.45;
+    padding-bottom:90px;
+  }
+  .wrap{max-width:520px; margin:0 auto; padding:0 18px;}
+
+  /* ---------- header ---------- */
+  header{
+    padding:calc(22px + env(safe-area-inset-top, 0px)) 0 10px;
+    display:flex; align-items:baseline; justify-content:space-between;
+  }
+  .brand{
+    font-family:'Archivo',sans-serif;
+    font-variation-settings:"wdth" 120, "wght" 900;
+    font-size:22px; letter-spacing:.5px; text-transform:uppercase;
+  }
+  .brand .bolt{color:var(--sun);}
+  .streak{
+    font-family:'Archivo',sans-serif; font-weight:700; font-size:15px;
+    color:var(--ink-soft);
+  }
+  .streak strong{color:var(--sun-deep); font-size:18px;}
+
+  /* ---------- day banner ---------- */
+  .banner{
+    background:var(--ink);
+    color:var(--paper);
+    border-radius:var(--radius);
+    padding:20px 20px 18px;
+    position:relative;
+    overflow:hidden;
+  }
+  .banner::after{
+    content:""; position:absolute; right:-40px; top:-40px;
+    width:160px; height:160px; border-radius:50%;
+    background:radial-gradient(circle, rgba(245,166,35,.35), transparent 70%);
+    pointer-events:none;
+  }
+  .banner .eyebrow{
+    font-size:13px; letter-spacing:2px; text-transform:uppercase;
+    color:var(--sun); font-weight:700;
+  }
+  .banner h1{
+    margin:6px 0 2px;
+    font-family:'Archivo',sans-serif;
+    font-variation-settings:"wdth" 110, "wght" 850;
+    font-size:34px; line-height:1.05; text-transform:uppercase;
+  }
+  .banner .sub{color:#BFD2D0; font-size:15px;}
+  .banner .doneflag{
+    display:none; margin-top:10px; font-weight:700; color:#7FE3C9; font-size:15px;
+  }
+  .banner.is-done .doneflag{display:block;}
+
+  /* ---------- controls row ---------- */
+  .controls{
+    display:flex; gap:10px; margin:14px 0 4px;
+  }
+  .controls button, .controls select{
+    flex:1;
+    font-family:'Archivo',sans-serif; font-weight:700; font-size:15px;
+    border:2px solid var(--ink); border-radius:12px;
+    background:var(--card); color:var(--ink);
+    padding:11px 8px; cursor:pointer;
+    appearance:none; text-align:center;
+  }
+  .controls button:active{transform:translateY(1px);}
+  .controls .shuffle{background:var(--sun); border-color:var(--sun-deep);}
+
+  /* ---------- sections ---------- */
+  h2.section{
+    font-family:'Archivo',sans-serif;
+    font-variation-settings:"wdth" 115, "wght" 800;
+    text-transform:uppercase; letter-spacing:1px;
+    font-size:16px; color:var(--ink-soft);
+    margin:26px 2px 10px;
+    display:flex; align-items:center; gap:10px;
+  }
+  h2.section::after{content:""; flex:1; height:2px; background:var(--line); border-radius:2px;}
+
+  /* ---------- exercise grid ---------- */
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .exgrid.single{grid-template-columns:1fr;}
+  .ex{
+    background:var(--card);
+    border:2px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px 14px 14px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+    position:relative;
+  }
+  .ex .num{
+    font-family:'Archivo',sans-serif;
+    font-variation-settings:"wdth" 90, "wght" 900;
+    font-size:52px; line-height:1;
+  }
+  .ex .num .unit{font-size:20px; font-variation-settings:"wdth" 100, "wght" 700; color:var(--ink-soft);}
+  .ex .name{
+    font-family:'Archivo',sans-serif; font-weight:700;
+    text-transform:uppercase; letter-spacing:.5px;
+    font-size:14px; margin-top:6px;
+  }
+  .ex .tap{font-size:12px; color:var(--ink-soft); margin-top:4px;}
+  .ex.done{border-color:var(--reef); background:#EAF6F2;}
+  .ex.done .num{color:var(--reef);}
+  .ex.done::after{
+    content:"✓"; position:absolute; top:8px; right:12px;
+    color:var(--reef); font-weight:900; font-size:18px;
+  }
+  .ex .timerbar{
+    display:none; margin-top:8px; height:8px; border-radius:4px;
+    background:var(--line); overflow:hidden;
+  }
+  .ex.timing .timerbar{display:block;}
+  .ex .timerbar i{display:block; height:100%; width:0%; background:var(--sun); transition:width .3s linear;}
+  .ex.timing{border-color:var(--sun-deep);}
+
+  /* ---------- detail sheet ---------- */
+  .sheet-back{
+    position:fixed; inset:0; background:rgba(18,43,51,.55);
+    display:none; z-index:40;
+  }
+  .sheet-back.open{display:block;}
+  .sheet{
+    position:fixed; left:0; right:0; bottom:-100%;
+    background:var(--card); z-index:41;
+    border-radius:22px 22px 0 0;
+    padding:22px 22px 34px;
+    max-width:520px; margin:0 auto;
+    transition:bottom .25s ease;
+    max-height:75vh; overflow-y:auto;
+  }
+  .sheet.open{bottom:0;}
+  .sheet h3{
+    font-family:'Archivo',sans-serif; font-variation-settings:"wdth" 110,"wght" 850;
+    text-transform:uppercase; margin:0 0 4px; font-size:22px;
+  }
+  .sheet .kind{color:var(--sun-deep); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:1.5px;}
+  .sheet p{margin:10px 0; font-size:16px;}
+  .sheet .var{background:var(--paper); border-radius:12px; padding:10px 12px; margin-top:8px; font-size:15px;}
+  .sheet .var b{color:var(--ink);}
+  .sheet .close{
+    margin-top:16px; width:100%;
+    font-family:'Archivo',sans-serif; font-weight:800; font-size:16px;
+    background:var(--ink); color:var(--paper);
+    border:none; border-radius:12px; padding:13px; cursor:pointer;
+  }
+
+  /* ---------- complete button ---------- */
+  .completebar{margin:26px 0 8px;}
+  .completebar button{
+    width:100%;
+    font-family:'Archivo',sans-serif; font-variation-settings:"wdth" 110,"wght" 850;
+    text-transform:uppercase; letter-spacing:1px;
+    font-size:18px; padding:16px;
+    border-radius:var(--radius); border:none; cursor:pointer;
+    background:var(--sun); color:var(--ink);
+    box-shadow:0 4px 0 var(--sun-deep);
+  }
+  .completebar button:active{transform:translateY(2px); box-shadow:0 2px 0 var(--sun-deep);}
+  .completebar button.saved{background:var(--reef); color:#fff; box-shadow:0 4px 0 #095A4A;}
+
+  /* ---------- history ---------- */
+  .history{
+    display:flex; gap:7px; justify-content:center; margin:14px 0 6px; flex-wrap:wrap;
+  }
+  .dot{
+    width:26px; height:26px; border-radius:8px;
+    background:var(--card); border:2px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; color:var(--ink-soft);
+  }
+  .dot.hit{background:var(--reef); border-color:var(--reef); color:#fff;}
+  .dot.today{border-color:var(--sun-deep);}
+  .hint{
+    text-align:center; font-size:13px; color:var(--ink-soft); margin:10px 0 30px;
+  }
+  .footnote{
+    font-size:12.5px; color:var(--ink-soft); margin:8px 2px 30px; text-align:center;
+  }
+  .nojs{
+    background:#FFF4E0; border:2px solid var(--sun-deep); border-radius:14px;
+    padding:14px 16px; margin:16px 0 4px; font-size:15px;
+  }
+  #errBanner{
+    display:none; background:#FBEAEA; border:2px solid var(--danger); color:#7A2222;
+    border-radius:14px; padding:12px 14px; margin:14px 0 4px;
+    font-size:13px; word-break:break-word; white-space:pre-wrap;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">Circuit<span class="bolt">⚡</span>Breaker</div>
+    <div class="streak">Streak <strong id="streakNum">0</strong></div>
+  </header>
+
+  <div class="banner" id="banner">
+    <div class="eyebrow" id="dayCount">Day 1</div>
+    <h1 id="focusTitle">Full Body Circuit</h1>
+    <div class="sub" id="dateLine"></div>
+    <div class="doneflag">✓ Completed — see you tomorrow</div>
+  </div>
+
+  <div class="controls">
+    <select id="levelSel" aria-label="Difficulty level">
+      <option value="ease">Easing In</option>
+      <option value="steady" selected>Steady</option>
+      <option value="strong">Strong</option>
+    </select>
+    <button class="shuffle" id="shuffleBtn">↻ Shuffle circuit</button>
+  </div>
+
+  <div class="nojs" id="nojsNote">
+    <b>Heads up:</b> this viewer isn't running the app's code, so today's circuit can't be generated.
+    On iPhone this usually happens when the file is opened as a Files / Quick Look preview —
+    open it from the Claude app chat instead, or in Safari.
+  </div>
+  <div id="errBanner"></div>
+
+  <h2 class="section">Warm-up</h2>
+  <div class="grid" id="warmGrid"></div>
+
+  <h2 class="section" id="mainHead">Main circuit</h2>
+  <div class="grid" id="mainGrid"></div>
+
+  <h2 class="section">Cool-down stretch</h2>
+  <div class="grid" id="coolGrid"></div>
+
+  <div class="completebar">
+    <button id="completeBtn">Mark day complete</button>
+  </div>
+
+  <div class="history" id="history"></div>
+  <div class="hint">Last 14 days · tap any exercise card to tick it off, tap the name area for form tips</div>
+
+  <div class="footnote">Timed holds start a countdown when ticked. Work at your own pace — sets can be split up across the day, just like the Push-Up Challenge. If anything causes joint pain, use the easier variation shown in the tips.</div>
+</div>
+
+<div class="sheet-back" id="sheetBack"></div>
+<div class="sheet" id="sheet">
+  <div class="kind" id="shKind"></div>
+  <h3 id="shName"></h3>
+  <p id="shCue"></p>
+  <div class="var" id="shEasy"></div>
+  <div class="var" id="shHard"></div>
+  <button class="close" id="shClose">Close</button>
+</div>
+
+<script>
+/* =========================================================
+   Circuit Breaker — deterministic daily circuit generator
+   ========================================================= */
+
+/* ---------- exercise library ---------- */
+/* unit: 'reps' | 'secs' | 'ea' (each side) */
+const LIB = {
+  warm: [
+    {n:"March on the spot", u:"secs", base:40, cue:"Lift knees to hip height, swing the arms, breathe easy. This is just to get blood moving.", easy:"Slow the pace and lower the knees.", hard:"Turn it into high knees at a jog."},
+    {n:"Arm circles", u:"reps", base:12, cue:"Big slow circles forward, then the same number backward. Reach wide through the fingertips.", easy:"Smaller circles.", hard:"Add a light backpack hold or speed them up."},
+    {n:"Hip circles", u:"ea", base:8, cue:"Hands on hips, draw big circles with your hips each direction. Great for loosening the lower back.", easy:"Smaller range.", hard:"Slow them right down for control."},
+    {n:"Torso twists", u:"reps", base:16, cue:"Feet planted, rotate the shoulders side to side, arms relaxed and swinging.", easy:"Reduce range.", hard:"Pause 1 second at each end."},
+    {n:"Leg swings", u:"ea", base:10, cue:"Hold a wall or chair, swing one leg forward and back like a pendulum. Loose, not forced.", easy:"Smaller swings.", hard:"Add side-to-side swings too."},
+    {n:"Shoulder rolls", u:"reps", base:12, cue:"Roll shoulders up, back and down. Undo the day's hunching before you load the arms.", easy:"Go slower.", hard:"Add arm reach overhead each roll."},
+    {n:"Ankle circles", u:"ea", base:10, cue:"One foot off the ground, circle the ankle both ways. Cheap insurance for step-ups and squats.", easy:"Hold support.", hard:"Do it balancing without support."}
+  ],
+  strength: [
+    {n:"Squats", u:"reps", base:14, tags:["lower","full"], cue:"Feet shoulder-width, sit back like reaching for a chair, chest up, drive through the heels.", easy:"Squat to an actual chair and tap it each rep.", hard:"Slow 3-second lowering, or hold the bottom 2 seconds."},
+    {n:"Push-ups", u:"reps", base:12, tags:["upper","full"], cue:"Hands under shoulders, body in one line, lower chest toward the floor and press away.", easy:"Hands on a bench or kitchen counter (incline push-up).", hard:"Feet on a step, or slow the lowering to 3 seconds."},
+    {n:"Tricep dips", u:"reps", base:12, tags:["upper","full"], cue:"Hands on a sturdy chair edge, bend elbows straight back to lower, press up. Keep shoulders away from ears.", easy:"Keep feet closer and knees bent.", hard:"Walk feet further out or straighten the legs."},
+    {n:"Step-ups", u:"ea", base:12, tags:["lower","full"], cue:"Use a solid step. Whole foot on, drive up through the heel, control the way down.", easy:"Lower step.", hard:"Higher step, or hold something heavy."},
+    {n:"Sit-ups", u:"reps", base:14, tags:["core","full"], cue:"Knees bent, curl up leading with the chest, exhale on the way up, roll down with control.", easy:"Crunches — shoulder blades off the floor only.", hard:"Slow 3-second lowering."},
+    {n:"Punches", u:"reps", base:30, tags:["upper","full"], cue:"Boxer's stance, rotate through the hips, snap the arm out and back. Left-right counts as two.", easy:"Slow the tempo.", hard:"Add a light dumbbell or tin in each hand."},
+    {n:"Reverse lunges", u:"ea", base:10, tags:["lower","full"], cue:"Step back, drop the back knee toward the floor, push through the front heel to stand. Easier on knees than forward lunges.", easy:"Shorter step, hold a chair for balance.", hard:"Pause 2 seconds at the bottom."},
+    {n:"Glute bridges", u:"reps", base:15, tags:["lower","core"], cue:"On your back, knees bent, squeeze the glutes to lift hips until body is a straight line. Pause at the top.", easy:"Smaller lift.", hard:"Single-leg bridges, half the reps each side."},
+    {n:"Calf raises", u:"reps", base:18, tags:["lower"], cue:"Rise onto the balls of the feet, pause, lower slowly. Fingertips on a wall for balance.", easy:"Both feet, smaller range.", hard:"One foot at a time on a step edge."},
+    {n:"Wall sit", u:"secs", base:35, tags:["lower"], cue:"Back flat on the wall, thighs toward parallel, knees over ankles. Breathe — don't hold your breath.", easy:"Sit higher (shallower angle).", hard:"Lower to parallel or extend the time."},
+    {n:"Plank", u:"secs", base:35, tags:["core","full"], cue:"Forearms down, body in one straight line, squeeze glutes and brace like someone's about to poke your stomach.", easy:"Knees down.", hard:"Lift one foot for half the time each."},
+    {n:"Bird dogs", u:"ea", base:8, tags:["core"], cue:"On all fours, extend opposite arm and leg, hold 2 seconds, swap. Keep hips level — no tipping.", easy:"Just the leg, no arm.", hard:"Elbow-to-knee crunch between reps."},
+    {n:"Supermans", u:"reps", base:12, tags:["core"], cue:"Face down, lift chest and legs a few centimetres, squeeze the whole back line, lower slowly.", easy:"Lift chest only.", hard:"Hold 3 seconds at the top."},
+    {n:"Standing knee raises", u:"ea", base:12, tags:["core","lower"], cue:"Stand tall, drive one knee up to hip height with control, lower without letting the foot slam.", easy:"Lower knee height, hold support.", hard:"Add a slow 2-second lower, no support."},
+    {n:"Side leg raises", u:"ea", base:12, tags:["lower"], cue:"Standing, lift one leg straight out to the side, toes forward. Hips are what fail first on rough ground — this is for them.", easy:"Hold a chair.", hard:"Pause 2 seconds at the top."},
+    {n:"Incline mountain climbers", u:"reps", base:20, tags:["core","full"], cue:"Hands on a bench, drive knees toward chest alternately at a steady rhythm.", easy:"Slow march tempo.", hard:"Hands on the floor."}
+  ],
+  balance: [
+    {n:"Single-leg stand", u:"secs", base:25, tags:["bal"], cue:"Stand on one foot, soft knee, eyes on a fixed point. Swap sides. Do it near a wall.", easy:"Fingertip on the wall.", hard:"Eyes closed, or stand on a folded towel."},
+    {n:"Heel-to-toe walk", u:"reps", base:12, tags:["bal"], cue:"Walk a straight line placing heel directly in front of toes, arms out like a tightrope.", easy:"Slightly wider placement.", hard:"Do it backward."},
+    {n:"Single-leg reach", u:"ea", base:8, tags:["bal"], cue:"Balance on one leg, hinge and reach toward the floor, stand tall again. Slow and controlled.", easy:"Reach to knee height only.", hard:"Touch the floor, no wobble allowed."},
+    {n:"Tandem stance hold", u:"secs", base:25, tags:["bal"], cue:"One foot directly in front of the other, hold steady. Swap the front foot halfway.", easy:"Feet slightly offset.", hard:"Close your eyes."}
+  ],
+  stretch: [
+    {n:"Hamstring stretch", u:"secs", base:30, cue:"Heel on a low step, leg straight, hinge forward from the hips until you feel the back of the thigh. Each side.", easy:"Less lean.", hard:"Reach toward the toes."},
+    {n:"Hip flexor stretch", u:"secs", base:30, cue:"Half-kneel, tuck the tailbone, shift hips forward gently. Undoes years of sitting. Each side.", easy:"Smaller shift.", hard:"Raise the same-side arm overhead."},
+    {n:"Figure-4 stretch", u:"secs", base:30, cue:"Seated or lying, ankle over opposite knee, pull the leg gently toward you. Great for hips after step-ups.", easy:"Sit upright in a chair version.", hard:"Lying version, pull deeper."},
+    {n:"Cat-cow", u:"reps", base:8, cue:"On all fours, arch and round the spine slowly with your breath. One of the best backs-over-50 moves there is.", easy:"Smaller range.", hard:"Pause 2 breaths at each end."},
+    {n:"Chest doorway stretch", u:"secs", base:30, cue:"Forearm on a doorframe, elbow at shoulder height, turn gently away until the chest opens.", easy:"Lower the elbow.", hard:"Both arms at once in the frame."},
+    {n:"Child's pose", u:"secs", base:40, cue:"Knees wide, sit back toward the heels, arms long, forehead down. Breathe into the lower back.", easy:"Cushion under hips or head.", hard:"Walk hands to each side for the lats."},
+    {n:"Standing quad stretch", u:"secs", base:25, cue:"Hold a wall, pull one heel toward your backside, knees together, stand tall. Each side.", easy:"Rest the foot on a chair behind you instead.", hard:"Add the hip-forward tuck."},
+    {n:"Thoracic rotations", u:"ea", base:8, cue:"On all fours, hand behind head, rotate the elbow up toward the ceiling, follow with your eyes.", easy:"Smaller rotation.", hard:"Pause 2 seconds at the top."},
+    {n:"Calf stretch", u:"secs", base:30, cue:"Hands on the wall, one leg back, heel down, lean in. Each side. Fishermen's stability starts at the ankles.", easy:"Shorter stance.", hard:"Bend the back knee slightly for the deep calf."},
+    {n:"Neck side stretch", u:"secs", base:20, cue:"Ear toward shoulder, opposite arm reaching gently down. Each side. Slow and kind — it's a neck.", easy:"Less tilt.", hard:"Add gentle hand assistance."}
+  ]
+};
+
+/* ---------- day plans ---------- */
+const PLANS = [
+  {name:"Full Body Circuit", pool:"strength", tags:["full","upper","lower","core"], count:6, mult:1.0},
+  {name:"Upper Body Focus", pool:"strength", tags:["upper","core"], count:5, mult:1.05},
+  {name:"Mobility & Balance", pool:"balance", tags:["bal"], count:4, mult:1.0, extraStretch:2},
+  {name:"Lower Body & Core", pool:"strength", tags:["lower","core"], count:6, mult:1.0},
+  {name:"Full Body Circuit", pool:"strength", tags:["full","upper","lower","core"], count:6, mult:1.1},
+  {name:"Flexibility Flow", pool:"stretch", tags:[], count:6, mult:1.0, isStretchDay:true},
+  {name:"Gentle Recovery", pool:"stretch", tags:[], count:4, mult:0.8, isStretchDay:true}
+];
+
+const LEVEL_MULT = {ease:0.7, steady:1.0, strong:1.35};
+
+/* ---------- seeded RNG ---------- */
+function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+function pickN(rng, arr, n){
+  const copy=arr.slice();
+  for(let i=copy.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];}
+  return copy.slice(0,n);
+}
+
+/* ---------- state ---------- */
+const KEY='circuit-breaker-v1';
+let state={level:'steady', start:null, done:{}, shuffles:{}};
+
+/* Dual-layer persistence:
+   - window.storage  → available inside the Claude app
+   - localStorage    → available in Safari / home-screen app
+   Each access is guarded, so whichever layer exists gets used. */
+const store={
+  async get(k){
+    try{
+      const r=await window.storage.get(k);
+      if(r && r.value!=null) return r.value;
+    }catch(e){}
+    try{
+      const v=localStorage.getItem(k);
+      if(v!=null) return v;
+    }catch(e){}
+    return null;
+  },
+  async set(k,v){
+    try{ await window.storage.set(k,v); }catch(e){}
+    try{ localStorage.setItem(k,v); }catch(e){}
+  }
+};
+
+async function loadState(){
+  const v=await store.get(KEY);
+  if(v){ try{ state=Object.assign(state, JSON.parse(v)); }catch(e){} }
+  if(!state.start){ state.start=todayISO(); await saveState(); }
+}
+async function saveState(){
+  await store.set(KEY, JSON.stringify(state));
+}
+
+/* ---------- date helpers ---------- */
+function todayISO(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function daysBetween(aISO,bISO){
+  const a=new Date(aISO+'T12:00:00'), b=new Date(bISO+'T12:00:00');
+  return Math.round((b-a)/86400000);
+}
+function isoOffset(iso, off){
+  const d=new Date(iso+'T12:00:00'); d.setDate(d.getDate()+off);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+/* ---------- workout generation ---------- */
+let today, dayNum, plan, workout, ticked;
+
+function buildWorkout(){
+  today = todayISO();
+  dayNum = daysBetween(state.start, today) + 1;
+  const shuffleN = state.shuffles[today] || 0;
+  plan = PLANS[(dayNum-1) % 7];
+
+  const seed = hashStr(today + '|' + shuffleN + '|' + state.level);
+  const rng = mulberry32(seed);
+
+  /* volume: level × plan × gentle ramp (+5% per completed week, capped at +40%) */
+  const week = Math.floor((dayNum-1)/7);
+  const ramp = Math.min(1 + week*0.05, 1.4);
+  const mult = LEVEL_MULT[state.level] * plan.mult * ramp;
+
+  const scale = (ex)=>{
+    const jitter = 0.85 + rng()*0.3;              /* ±15% like the PUC circuits */
+    let v = Math.round(ex.base * mult * jitter);
+    v = Math.max(ex.u==='secs'?15:5, v);
+    return v;
+  };
+
+  const warm = pickN(rng, LIB.warm, 3).map(e=>({...e, val:scale({...e, base:e.base}), kind:'Warm-up'}));
+
+  let mainPool;
+  if(plan.pool==='strength'){
+    mainPool = LIB.strength.filter(e=>e.tags.some(t=>plan.tags.includes(t)));
+  } else if(plan.pool==='balance'){
+    mainPool = LIB.balance.concat(pickN(rng, LIB.strength.filter(e=>e.tags.includes('core')), 2));
+  } else {
+    mainPool = LIB.stretch;
+  }
+  const main = pickN(rng, mainPool, plan.count).map(e=>({...e, val:scale(e), kind: plan.isStretchDay?'Stretch':'Main circuit'}));
+
+  const coolCount = 3 + (plan.extraStretch||0);
+  const usedNames = new Set(main.map(m=>m.n));
+  const cool = pickN(rng, LIB.stretch.filter(s=>!usedNames.has(s.n)), coolCount)
+      .map(e=>({...e, val:scale(e), kind:'Cool-down'}));
+
+  workout = {warm, main, cool};
+  ticked = {};
+}
+
+/* ---------- rendering ---------- */
+const $=id=>document.getElementById(id);
+
+function unitLabel(ex){
+  if(ex.u==='secs') return '<span class="unit">sec</span>';
+  if(ex.u==='ea') return '<span class="unit">/side</span>';
+  return '';
+}
+
+function renderGrid(el, list, prefix){
+  el.innerHTML='';
+  list.forEach((ex,i)=>{
+    const id=prefix+i;
+    const card=document.createElement('div');
+    card.className='ex';
+    card.dataset.id=id;
+    card.innerHTML=`
+      <div class="num">${ex.val}${unitLabel(ex)}</div>
+      <div class="name">${ex.n}</div>
+      <div class="tap">tap when done · ⓘ hold for tips</div>
+      <div class="timerbar"><i></i></div>`;
+    /* tap = toggle done (starts timer for secs); long-press or name tap = info */
+    let pressTimer=null, longPressed=false;
+    card.addEventListener('touchstart',()=>{longPressed=false; pressTimer=setTimeout(()=>{longPressed=true; openSheet(ex);},450);},{passive:true});
+    card.addEventListener('touchend',()=>{clearTimeout(pressTimer);});
+    card.addEventListener('contextmenu',e=>{e.preventDefault(); openSheet(ex);});
+    card.addEventListener('click',(e)=>{
+      if(longPressed){longPressed=false; return;}
+      toggleCard(card, ex);
+    });
+    el.appendChild(card);
+  });
+}
+
+let activeTimers={};
+function toggleCard(card, ex){
+  const id=card.dataset.id;
+  if(card.classList.contains('timing')){ /* cancel timer */
+    clearInterval(activeTimers[id]); delete activeTimers[id];
+    card.classList.remove('timing');
+    card.querySelector('.timerbar i').style.width='0%';
+    return;
+  }
+  if(card.classList.contains('done')){
+    card.classList.remove('done'); ticked[id]=false; return;
+  }
+  if(ex.u==='secs'){
+    /* run countdown then mark done */
+    card.classList.add('timing');
+    const bar=card.querySelector('.timerbar i');
+    const total=ex.val*1000; const t0=Date.now();
+    activeTimers[id]=setInterval(()=>{
+      const p=Math.min(1,(Date.now()-t0)/total);
+      bar.style.width=(p*100)+'%';
+      if(p>=1){
+        clearInterval(activeTimers[id]); delete activeTimers[id];
+        card.classList.remove('timing');
+        card.classList.add('done'); ticked[id]=true;
+        bar.style.width='0%';
+        if(navigator.vibrate) navigator.vibrate(200);
+      }
+    },250);
+  } else {
+    card.classList.add('done'); ticked[id]=true;
+  }
+}
+
+function openSheet(ex){
+  $('shKind').textContent=ex.kind||'';
+  $('shName').textContent=ex.n;
+  $('shCue').textContent=ex.cue;
+  $('shEasy').innerHTML='<b>Easier:</b> '+ex.easy;
+  $('shHard').innerHTML='<b>Harder:</b> '+ex.hard;
+  $('sheet').classList.add('open');
+  $('sheetBack').classList.add('open');
+}
+function closeSheet(){$('sheet').classList.remove('open');$('sheetBack').classList.remove('open');}
+$('shClose').addEventListener('click',closeSheet);
+$('sheetBack').addEventListener('click',closeSheet);
+
+function renderAll(){
+  buildWorkout();
+  $('dayCount').textContent='Day '+dayNum;
+  $('focusTitle').textContent=plan.name;
+  const d=new Date(today+'T12:00:00');
+  $('dateLine').textContent=d.toLocaleDateString('en-AU',{weekday:'long', day:'numeric', month:'long'});
+  $('mainHead').firstChild.textContent = plan.isStretchDay ? 'Today\u2019s flow ' : 'Main circuit ';
+  renderGrid($('warmGrid'), workout.warm, 'w');
+  renderGrid($('mainGrid'), workout.main, 'm');
+  renderGrid($('coolGrid'), workout.cool, 'c');
+  $('levelSel').value=state.level;
+  const done=!!state.done[today];
+  $('banner').classList.toggle('is-done',done);
+  $('completeBtn').textContent = done ? '✓ Day complete' : 'Mark day complete';
+  $('completeBtn').classList.toggle('saved',done);
+  renderHistory();
+}
+
+function renderHistory(){
+  const h=$('history'); h.innerHTML='';
+  for(let i=13;i>=0;i--){
+    const iso=isoOffset(today,-i);
+    const dot=document.createElement('div');
+    dot.className='dot'+(state.done[iso]?' hit':'')+(i===0?' today':'');
+    dot.textContent=new Date(iso+'T12:00:00').getDate();
+    h.appendChild(dot);
+  }
+  /* streak: consecutive done days ending today or yesterday */
+  let streak=0, cursor = state.done[today] ? today : isoOffset(today,-1);
+  while(state.done[cursor]){ streak++; cursor=isoOffset(cursor,-1); }
+  $('streakNum').textContent=streak;
+}
+
+/* ---------- controls ---------- */
+$('levelSel').addEventListener('change', async e=>{
+  state.level=e.target.value; await saveState(); renderAll();
+});
+$('shuffleBtn').addEventListener('click', async ()=>{
+  state.shuffles[today]=(state.shuffles[today]||0)+1;
+  await saveState(); renderAll();
+});
+$('completeBtn').addEventListener('click', async ()=>{
+  if(state.done[today]) delete state.done[today];
+  else state.done[today]=true;
+  await saveState(); renderAll();
+});
+
+/* ---------- boot ---------- */
+function showErr(msg){
+  const b=document.getElementById('errBanner');
+  if(b){ b.style.display='block'; b.textContent='App error — send me a screenshot of this:\n'+msg; }
+}
+window.addEventListener('error', e=>showErr((e.message||'Unknown error')+(e.lineno?(' (line '+e.lineno+')'):'')));
+window.addEventListener('unhandledrejection', e=>showErr('Async: '+(e.reason && e.reason.message || e.reason)));
+
+(async function(){
+  /* JS is running — remove the static no-JS notice */
+  const nj=document.getElementById('nojsNote');
+  if(nj) nj.remove();
+  try{
+    await loadState();
+    renderAll();
+  }catch(err){
+    showErr((err && err.message) || String(err));
+  }
+})();
+
+/* ---------- PWA service worker ---------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
