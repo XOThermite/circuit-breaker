@@ -1,6 +1,6 @@
 /* Circuit Breaker service worker — precache everything, serve cache-first.
    Bump VERSION whenever index.html changes so phones pick up the update. */
-const VERSION = 'cb-v1';
+const VERSION = 'cb-v3';
 const ASSETS = ['./', './index.html', './manifest.webmanifest',
                 './icon.png', './icon-192.png', './icon-512.png'];
 

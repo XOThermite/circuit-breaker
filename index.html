@@ -142,6 +142,22 @@
     content:"✓"; position:absolute; top:8px; right:12px;
     color:var(--reef); font-weight:900; font-size:18px;
   }
+  .ex .prog{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    margin-top:8px;
+  }
+  .ex .pbtn{
+    width:34px; height:30px; border-radius:9px;
+    border:2px solid var(--line); background:var(--paper);
+    font-family:'Archivo',sans-serif; font-weight:800; font-size:17px;
+    color:var(--ink-soft); cursor:pointer; line-height:1;
+  }
+  .ex .pbtn:active{transform:translateY(1px);}
+  .ex .pcount{
+    min-width:56px; font-family:'Archivo',sans-serif; font-weight:800;
+    font-size:14px; color:var(--sun-deep);
+  }
+  .ex.done .prog{display:none;}
   .ex .timerbar{
     display:none; margin-top:8px; height:8px; border-radius:4px;
     background:var(--line); overflow:hidden;
@@ -181,6 +197,41 @@
     border:none; border-radius:12px; padding:13px; cursor:pointer;
   }
 
+  /* ---------- jog dial ---------- */
+  .dialwrap{display:flex; justify-content:center; margin:14px 0 6px;}
+  .dialpad{
+    width:230px; height:230px; border-radius:50%;
+    border:10px solid var(--line);
+    position:relative; touch-action:none; cursor:grab;
+    background:radial-gradient(circle at 50% 42%, #FFFFFF, var(--paper));
+  }
+  .dialpad.active{border-color:var(--sun);}
+  .dialdot{
+    position:absolute; width:22px; height:22px; border-radius:50%;
+    background:var(--sun-deep); left:50%; top:-16px;
+    transform:translateX(-50%); pointer-events:none;
+  }
+  .dialcount{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:'Archivo',sans-serif; font-variation-settings:"wdth" 90,"wght" 900;
+    font-size:74px; pointer-events:none;
+  }
+  .ladder{
+    text-align:center; min-height:24px; margin:6px 0 2px;
+    font-family:'Archivo',sans-serif; font-weight:700; font-size:16px;
+    color:var(--ink-soft);
+  }
+  .ladder b{color:var(--sun-deep);}
+  .dialbtns{display:flex; gap:10px; margin-top:10px;}
+  .dialbtns .logset{
+    flex:1.4; font-family:'Archivo',sans-serif; font-weight:800; font-size:16px;
+    background:var(--sun); color:var(--ink); border:none; border-radius:12px;
+    padding:13px; cursor:pointer; box-shadow:0 3px 0 var(--sun-deep);
+  }
+  .dialbtns .logset:active{transform:translateY(2px); box-shadow:0 1px 0 var(--sun-deep);}
+  .dialbtns .close{flex:1; margin-top:0;}
+  .dialhint{text-align:center; font-size:12.5px; color:var(--ink-soft); margin-top:10px;}
+
   /* ---------- complete button ---------- */
   .completebar{margin:26px 0 8px;}
   .completebar button{
@@ -195,6 +246,26 @@
   .completebar button:active{transform:translateY(2px); box-shadow:0 2px 0 var(--sun-deep);}
   .completebar button.saved{background:var(--reef); color:#fff; box-shadow:0 4px 0 #095A4A;}
 
+  #tuneNote{
+    display:none; text-align:center; font-size:14px; font-weight:600;
+    color:var(--reef); margin:10px 0 0;
+  }
+  /* ---------- intro card ---------- */
+  .intro{
+    background:var(--card); border:2px solid var(--sun);
+    border-radius:var(--radius); padding:16px 16px 14px; margin-top:14px;
+  }
+  .intro h2{
+    font-family:'Archivo',sans-serif; font-variation-settings:"wdth" 110,"wght" 850;
+    font-size:17px; text-transform:uppercase; margin:0 0 8px;
+  }
+  .intro p{margin:6px 0; font-size:14.5px;}
+  .intro button{
+    width:100%; margin-top:10px;
+    font-family:'Archivo',sans-serif; font-weight:800; font-size:15px;
+    background:var(--ink); color:var(--paper); border:none; border-radius:12px;
+    padding:11px; cursor:pointer;
+  }
   /* ---------- history ---------- */
   .history{
     display:flex; gap:7px; justify-content:center; margin:14px 0 6px; flex-wrap:wrap;
@@ -238,6 +309,15 @@
     <div class="doneflag">✓ Completed — see you tomorrow</div>
   </div>
 
+  <div class="intro" id="introCard" style="display:none">
+    <h2>How it works</h2>
+    <p><b>Tap a card</b> when an exercise is done. <b>Tap the big number</b> to open the set counter dial — spin it, log sets as you go.</p>
+    <p><b>Hold a card</b> for form tips with easier and harder variations. Timed holds ring a soft bell when done — two-sided stretches ding halfway to swap sides.</p>
+    <p>The circuit changes daily and quietly tunes each exercise to you over time. Pick your level below, shuffle if today's mix doesn't appeal, and split sets across the day however suits.</p>
+    <p style="color:var(--ink-soft)">Work within your comfort — the easier variations are always legitimate, and if you have a health condition, check with your GP before starting.</p>
+    <button id="introDismiss">Let's go</button>
+  </div>
+
   <div class="controls">
     <select id="levelSel" aria-label="Difficulty level">
       <option value="ease">Easing In</option>
@@ -266,6 +346,7 @@
   <div class="completebar">
     <button id="completeBtn">Mark day complete</button>
   </div>
+  <div id="tuneNote"></div>
 
   <div class="history" id="history"></div>
   <div class="hint">Last 14 days · tap any exercise card to tick it off, tap the name area for form tips</div>
@@ -281,6 +362,23 @@
   <div class="var" id="shEasy"></div>
   <div class="var" id="shHard"></div>
   <button class="close" id="shClose">Close</button>
+</div>
+
+<div class="sheet" id="dialSheet">
+  <div class="kind" id="dlKind">Set counter</div>
+  <h3 id="dlName"></h3>
+  <div class="dialwrap">
+    <div class="dialpad" id="dialPad">
+      <div class="dialdot" id="dialDot"></div>
+      <div class="dialcount" id="dialCount">0</div>
+    </div>
+  </div>
+  <div class="ladder" id="dlLadder"></div>
+  <div class="dialbtns">
+    <button class="logset" id="dlLog">Log set</button>
+    <button class="close" id="dlClose">Done</button>
+  </div>
+  <div class="dialhint">Circle clockwise to count up · speed matters · anticlockwise to trim</div>
 </div>
 
 <script>
@@ -319,22 +417,22 @@ const LIB = {
     {n:"Incline mountain climbers", u:"reps", base:20, tags:["core","full"], cue:"Hands on a bench, drive knees toward chest alternately at a steady rhythm.", easy:"Slow march tempo.", hard:"Hands on the floor."}
   ],
   balance: [
-    {n:"Single-leg stand", u:"secs", base:25, tags:["bal"], cue:"Stand on one foot, soft knee, eyes on a fixed point. Swap sides. Do it near a wall.", easy:"Fingertip on the wall.", hard:"Eyes closed, or stand on a folded towel."},
+    {n:"Single-leg stand", u:"secs", sides:true, base:25, tags:["bal"], cue:"Stand on one foot, soft knee, eyes on a fixed point. Swap sides. Do it near a wall.", easy:"Fingertip on the wall.", hard:"Eyes closed, or stand on a folded towel."},
     {n:"Heel-to-toe walk", u:"reps", base:12, tags:["bal"], cue:"Walk a straight line placing heel directly in front of toes, arms out like a tightrope.", easy:"Slightly wider placement.", hard:"Do it backward."},
     {n:"Single-leg reach", u:"ea", base:8, tags:["bal"], cue:"Balance on one leg, hinge and reach toward the floor, stand tall again. Slow and controlled.", easy:"Reach to knee height only.", hard:"Touch the floor, no wobble allowed."},
-    {n:"Tandem stance hold", u:"secs", base:25, tags:["bal"], cue:"One foot directly in front of the other, hold steady. Swap the front foot halfway.", easy:"Feet slightly offset.", hard:"Close your eyes."}
+    {n:"Tandem stance hold", u:"secs", sides:true, base:25, tags:["bal"], cue:"One foot directly in front of the other, hold steady. Swap the front foot halfway.", easy:"Feet slightly offset.", hard:"Close your eyes."}
   ],
   stretch: [
-    {n:"Hamstring stretch", u:"secs", base:30, cue:"Heel on a low step, leg straight, hinge forward from the hips until you feel the back of the thigh. Each side.", easy:"Less lean.", hard:"Reach toward the toes."},
-    {n:"Hip flexor stretch", u:"secs", base:30, cue:"Half-kneel, tuck the tailbone, shift hips forward gently. Undoes years of sitting. Each side.", easy:"Smaller shift.", hard:"Raise the same-side arm overhead."},
-    {n:"Figure-4 stretch", u:"secs", base:30, cue:"Seated or lying, ankle over opposite knee, pull the leg gently toward you. Great for hips after step-ups.", easy:"Sit upright in a chair version.", hard:"Lying version, pull deeper."},
+    {n:"Hamstring stretch", u:"secs", sides:true, base:30, cue:"Heel on a low step, leg straight, hinge forward from the hips until you feel the back of the thigh. Each side.", easy:"Less lean.", hard:"Reach toward the toes."},
+    {n:"Hip flexor stretch", u:"secs", sides:true, base:30, cue:"Half-kneel, tuck the tailbone, shift hips forward gently. Undoes years of sitting. Each side.", easy:"Smaller shift.", hard:"Raise the same-side arm overhead."},
+    {n:"Figure-4 stretch", u:"secs", sides:true, base:30, cue:"Seated or lying, ankle over opposite knee, pull the leg gently toward you. Great for hips after step-ups.", easy:"Sit upright in a chair version.", hard:"Lying version, pull deeper."},
     {n:"Cat-cow", u:"reps", base:8, cue:"On all fours, arch and round the spine slowly with your breath. One of the best backs-over-50 moves there is.", easy:"Smaller range.", hard:"Pause 2 breaths at each end."},
     {n:"Chest doorway stretch", u:"secs", base:30, cue:"Forearm on a doorframe, elbow at shoulder height, turn gently away until the chest opens.", easy:"Lower the elbow.", hard:"Both arms at once in the frame."},
     {n:"Child's pose", u:"secs", base:40, cue:"Knees wide, sit back toward the heels, arms long, forehead down. Breathe into the lower back.", easy:"Cushion under hips or head.", hard:"Walk hands to each side for the lats."},
-    {n:"Standing quad stretch", u:"secs", base:25, cue:"Hold a wall, pull one heel toward your backside, knees together, stand tall. Each side.", easy:"Rest the foot on a chair behind you instead.", hard:"Add the hip-forward tuck."},
+    {n:"Standing quad stretch", u:"secs", sides:true, base:25, cue:"Hold a wall, pull one heel toward your backside, knees together, stand tall. Each side.", easy:"Rest the foot on a chair behind you instead.", hard:"Add the hip-forward tuck."},
     {n:"Thoracic rotations", u:"ea", base:8, cue:"On all fours, hand behind head, rotate the elbow up toward the ceiling, follow with your eyes.", easy:"Smaller rotation.", hard:"Pause 2 seconds at the top."},
-    {n:"Calf stretch", u:"secs", base:30, cue:"Hands on the wall, one leg back, heel down, lean in. Each side. Fishermen's stability starts at the ankles.", easy:"Shorter stance.", hard:"Bend the back knee slightly for the deep calf."},
-    {n:"Neck side stretch", u:"secs", base:20, cue:"Ear toward shoulder, opposite arm reaching gently down. Each side. Slow and kind — it's a neck.", easy:"Less tilt.", hard:"Add gentle hand assistance."}
+    {n:"Calf stretch", u:"secs", sides:true, base:30, cue:"Hands on the wall, one leg back, heel down, lean in. Each side. Fishermen's stability starts at the ankles.", easy:"Shorter stance.", hard:"Bend the back knee slightly for the deep calf."},
+    {n:"Neck side stretch", u:"secs", sides:true, base:20, cue:"Ear toward shoulder, opposite arm reaching gently down. Each side. Slow and kind — it's a neck.", easy:"Less tilt.", hard:"Add gentle hand assistance."}
   ]
 };
 
@@ -362,7 +460,10 @@ function pickN(rng, arr, n){
 
 /* ---------- state ---------- */
 const KEY='circuit-breaker-v1';
-let state={level:'steady', start:null, done:{}, shuffles:{}};
+let state={level:'steady', start:null, done:{}, shuffles:{}, prog:null,
+           sets:[],      /* append-only: {d:date, x:exercise, r:[reps per set]} */
+           cal:{},       /* per-exercise tuning: {m:multiplier, w:weekStart, wm:m at week start} */
+           seenIntro:false, lastDecay:null};
 
 /* Dual-layer persistence:
    - window.storage  → available inside the Claude app
@@ -409,11 +510,87 @@ function isoOffset(iso, off){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 
+/* ---------- adaptive calibration engine ---------- */
+function calFor(name){
+  const c = state.cal && state.cal[name];
+  return c ? c.m : 1;
+}
+function weekStartISO(iso){
+  const d=new Date(iso+'T12:00:00');
+  const dow=(d.getDay()+6)%7;            /* Monday = 0 */
+  return isoOffset(iso, -dow);
+}
+function todaySetsFor(name){
+  for(let i=state.sets.length-1;i>=0;i--){
+    const e=state.sets[i];
+    if(e.d===today && e.x===name) return e;
+    if(e.d!==today && i<state.sets.length-40) break;
+  }
+  return null;
+}
+function logSet(name, reps){
+  let e=todaySetsFor(name);
+  if(!e){ e={d:today, x:name, r:[]}; state.sets.push(e); }
+  e.r.push(reps);
+  if(state.sets.length>5000) state.sets.splice(0, state.sets.length-5000);
+  saveState();
+  try{
+    if(/\.local$/.test(location.hostname)){
+      fetch('/log?event=set|'+encodeURIComponent(name)+'|'+reps+'&day='+today).catch(()=>{});
+    }
+  }catch(err){}
+  return e;
+}
+/* Evaluate today's evidence and nudge each exercise's multiplier.
+   Same maths as a low-pass filter: new = 0.7*old + 0.3*signal. */
+function runCalibration(){
+  const notes=[];
+  const wk=weekStartISO(today);
+  workout.main.forEach((ex,i)=>{
+    if(ex.u==='secs') return;                     /* engine only reads rep evidence */
+    const id='m'+i;
+    const entry=todaySetsFor(ex.n);
+    let s=null;
+    if(entry && entry.r.length){
+      const total=entry.r.reduce((a,b)=>a+b,0);
+      const reached= total>=ex.val;
+      if(reached && entry.r.length<=1) s=1.07;    /* one set, cruised it */
+      else if(reached && entry.r.length<=3) s=1.0;/* healthy decaying ladder */
+      else s=0.92;                                /* 4+ sets or fell short */
+    } else if(typeof ticked[id]==='number'){
+      s=0.92;                                     /* partial without sets = fell short */
+    }
+    if(s===null) return;                          /* no evidence, no change */
+    let c=state.cal[ex.n] || {m:1, w:wk, wm:1};
+    if(c.w!==wk){ c.w=wk; c.wm=c.m; }
+    let m = c.m*(0.7 + 0.3*s);                    /* EWMA toward the signal */
+    m = Math.min(c.wm*1.10, Math.max(c.wm*0.90, m));  /* max ±10% per week */
+    m = Math.min(1.5, Math.max(0.6, m));          /* hard bounds */
+    if(Math.abs(m-c.m)>0.005){
+      notes.push(ex.n+(m>c.m?' \u2191':' \u2193'));
+    }
+    c.m=m; state.cal[ex.n]=c;
+  });
+  return notes;
+}
+/* Detraining: after a 14+ day break, glide multipliers halfway back to neutral. */
+function applyDetrainingDecay(){
+  if(state.lastDecay===today) return;
+  const doneDates=Object.keys(state.done).sort();
+  if(!doneDates.length) return;
+  const gap=daysBetween(doneDates[doneDates.length-1], today);
+  if(gap>=14){
+    for(const k in state.cal){ state.cal[k].m = 1 + (state.cal[k].m-1)*0.5; }
+  }
+  state.lastDecay=today;
+}
+
 /* ---------- workout generation ---------- */
 let today, dayNum, plan, workout, ticked;
 
 function buildWorkout(){
   today = todayISO();
+  applyDetrainingDecay();
   dayNum = daysBetween(state.start, today) + 1;
   const shuffleN = state.shuffles[today] || 0;
   plan = PLANS[(dayNum-1) % 7];
@@ -428,7 +605,7 @@ function buildWorkout(){
 
   const scale = (ex)=>{
     const jitter = 0.85 + rng()*0.3;              /* ±15% like the PUC circuits */
-    let v = Math.round(ex.base * mult * jitter);
+    let v = Math.round(ex.base * mult * jitter * calFor(ex.n));
     v = Math.max(ex.u==='secs'?15:5, v);
     return v;
   };
@@ -451,14 +628,21 @@ function buildWorkout(){
       .map(e=>({...e, val:scale(e), kind:'Cool-down'}));
 
   workout = {warm, main, cool};
-  ticked = {};
+  /* restore today's progress (survives closing the app mid-workout) */
+  const progKey = today+'|'+shuffleN+'|'+state.level;
+  ticked = (state.prog && state.prog.key===progKey) ? state.prog.map : {};
+  ticked.__key = progKey;
+}
+function saveProg(){
+  state.prog = { key: ticked.__key, map: ticked };
+  saveState();
 }
 
 /* ---------- rendering ---------- */
 const $=id=>document.getElementById(id);
 
 function unitLabel(ex){
-  if(ex.u==='secs') return '<span class="unit">sec</span>';
+  if(ex.u==='secs') return '<span class="unit">'+(ex.sides?'sec/side':'sec')+'</span>';
   if(ex.u==='ea') return '<span class="unit">/side</span>';
   return '';
 }
@@ -470,11 +654,32 @@ function renderGrid(el, list, prefix){
     const card=document.createElement('div');
     card.className='ex';
     card.dataset.id=id;
+    const chunk=Math.max(1, Math.round(ex.val/4));
     card.innerHTML=`
       <div class="num">${ex.val}${unitLabel(ex)}</div>
       <div class="name">${ex.n}</div>
       <div class="tap">tap when done · ⓘ hold for tips</div>
+      ${ex.u!=='secs'?`<div class="prog"><button class="pbtn" data-a="-">−</button><span class="pcount"></span><button class="pbtn" data-a="+">+</button></div>`:''}
       <div class="timerbar"><i></i></div>`;
+    if(ex.u!=='secs'){
+      const numEl=card.querySelector('.num');
+      numEl.style.cursor='pointer';
+      numEl.addEventListener('click',e=>{ e.stopPropagation(); openDial(ex, card); });
+    }
+    /* restore saved state for this card */
+    const saved=ticked[id];
+    if(saved===true) card.classList.add('done');
+    else if(typeof saved==='number' && saved>0) setPartial(card, ex, saved, false);
+    /* partial stepper (rep cards only) */
+    card.querySelectorAll('.pbtn').forEach(b=>{
+      b.addEventListener('click', e=>{
+        e.stopPropagation();
+        let n = (typeof ticked[id]==='number') ? ticked[id] : (ticked[id]===true ? ex.val : 0);
+        n += (b.dataset.a==='+'? chunk : -chunk);
+        n = Math.max(0, Math.min(ex.val, n));
+        setPartial(card, ex, n, true);
+      });
+    });
     /* tap = toggle done (starts timer for secs); long-press or name tap = info */
     let pressTimer=null, longPressed=false;
     card.addEventListener('touchstart',()=>{longPressed=false; pressTimer=setTimeout(()=>{longPressed=true; openSheet(ex);},450);},{passive:true});
@@ -488,37 +693,177 @@ function renderGrid(el, list, prefix){
   });
 }
 
+/* ---------- gentle audio cues (synthesised, no files) ---------- */
+let actx=null;
+function audioCtx(){
+  try{
+    if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==='suspended') actx.resume();
+  }catch(e){}
+  return actx;
+}
+function chime(freqs, dur, vol){
+  const ctx=audioCtx(); if(!ctx) return;
+  const t0=ctx.currentTime;
+  freqs.forEach((f,i)=>{
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.type='sine'; o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,t0);
+    g.gain.exponentialRampToValueAtTime(vol/(i+1), t0+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t0); o.stop(t0+dur+0.1);
+  });
+}
+/* long singing-bowl bell for "hold complete" */
+function bellDone(){ chime([660,990,1485], 2.6, 0.22); }
+/* two quick soft dings for "swap sides" */
+function dingSwap(){ chime([880], 0.55, 0.18); setTimeout(()=>chime([880],0.55,0.18), 380); }
+
 let activeTimers={};
+function setPartial(card, ex, n, save){
+  const id=card.dataset.id;
+  const pc=card.querySelector('.pcount');
+  if(n>=ex.val){
+    ticked[id]=true;
+    card.classList.add('done');
+    if(pc) pc.textContent='';
+  } else {
+    ticked[id]= n>0 ? n : false;
+    card.classList.remove('done');
+    if(pc) pc.textContent= n>0 ? (n+' / '+ex.val) : '';
+  }
+  if(save) saveProg();
+}
 function toggleCard(card, ex){
   const id=card.dataset.id;
   if(card.classList.contains('timing')){ /* cancel timer */
     clearInterval(activeTimers[id]); delete activeTimers[id];
     card.classList.remove('timing');
     card.querySelector('.timerbar i').style.width='0%';
+    const h=card.querySelector('.tap'); if(h) h.textContent='tap when done · ⓘ hold for tips';
     return;
   }
   if(card.classList.contains('done')){
-    card.classList.remove('done'); ticked[id]=false; return;
+    card.classList.remove('done'); ticked[id]=false;
+    const pc=card.querySelector('.pcount'); if(pc) pc.textContent='';
+    saveProg(); return;
   }
   if(ex.u==='secs'){
-    /* run countdown then mark done */
+    /* run countdown then mark done; per-side holds run both sides with a swap cue */
+    audioCtx();                       /* unlock audio on this user gesture */
     card.classList.add('timing');
     const bar=card.querySelector('.timerbar i');
-    const total=ex.val*1000; const t0=Date.now();
+    const hint=card.querySelector('.tap');
+    const total=ex.val*1000*(ex.sides?2:1);
+    const t0=Date.now();
+    let swapped=false;
     activeTimers[id]=setInterval(()=>{
-      const p=Math.min(1,(Date.now()-t0)/total);
+      const elapsed=Date.now()-t0;
+      const p=Math.min(1, elapsed/total);
       bar.style.width=(p*100)+'%';
+      const remain=Math.ceil((total-elapsed)/1000);
+      if(hint) hint.textContent = ex.sides
+        ? (p<0.5? 'first side · '+remain+'s total' : 'second side · '+remain+'s')
+        : (remain+'s remaining');
+      if(ex.sides && !swapped && p>=0.5){
+        swapped=true;
+        dingSwap();
+        if(navigator.vibrate) navigator.vibrate([120,80,120]);
+      }
       if(p>=1){
         clearInterval(activeTimers[id]); delete activeTimers[id];
         card.classList.remove('timing');
         card.classList.add('done'); ticked[id]=true;
         bar.style.width='0%';
-        if(navigator.vibrate) navigator.vibrate(200);
+        if(hint) hint.textContent='tap when done · ⓘ hold for tips';
+        bellDone();
+        if(navigator.vibrate) navigator.vibrate(300);
+        saveProg();
       }
     },250);
   } else {
     card.classList.add('done'); ticked[id]=true;
+    saveProg();
   }
+}
+
+/* ---------- jog dial: iPod-style set counter ---------- */
+const dial={ex:null, card:null, count:0, acc:0, lastAng:null, lastT:0, tracking:false};
+
+function dialAngle(e, pad){
+  const r=pad.getBoundingClientRect();
+  const x=(e.clientX!==undefined?e.clientX:0)-(r.left+r.width/2);
+  const y=(e.clientY!==undefined?e.clientY:0)-(r.top+r.height/2);
+  return Math.atan2(y,x)*180/Math.PI;
+}
+/* pure step logic (testable): angular delta + speed -> rep changes */
+function dialApply(d, dtMs){
+  if(d>180) d-=360; if(d<-180) d+=360;
+  const speed=Math.abs(d)/Math.max(dtMs,1)*1000;   /* deg per second */
+  const degPerRep = speed>260 ? 10 : 25;           /* spin fast, count fast */
+  dial.acc+=d;
+  let changed=0;
+  while(dial.acc>=degPerRep){ dial.acc-=degPerRep; if(dial.count<999){dial.count++; changed++;} }
+  while(dial.acc<=-degPerRep){ dial.acc+=degPerRep; if(dial.count>0){dial.count--; changed--;} }
+  return changed;
+}
+function dialTick(){ if(navigator.vibrate) navigator.vibrate(8); }
+function dialRender(){
+  $('dialCount').textContent=dial.count;
+  const e=todaySetsFor(dial.ex.n);
+  const done=e? e.r.reduce((a,b)=>a+b,0) : 0;
+  $('dlLadder').innerHTML = e && e.r.length
+    ? e.r.join(' · ')+' — <b>'+done+' / '+dial.ex.val+'</b>'
+    : 'no sets yet — target '+dial.ex.val;
+}
+function openDial(ex, card){
+  dial.ex=ex; dial.card=card; dial.count=0; dial.acc=0; dial.lastAng=null;
+  $('dlName').textContent=ex.n;
+  dialRender();
+  $('dialSheet').classList.add('open');
+  $('sheetBack').classList.add('open');
+}
+function closeDial(){
+  $('dialSheet').classList.remove('open');
+  if(!$('sheet').classList.contains('open')) $('sheetBack').classList.remove('open');
+}
+(function wireDial(){
+  const pad=$('dialPad');
+  pad.addEventListener('pointerdown',e=>{
+    dial.tracking=true; pad.setPointerCapture(e.pointerId);
+    pad.classList.add('active');
+    dial.lastAng=dialAngle(e,pad); dial.lastT=Date.now();
+  });
+  pad.addEventListener('pointermove',e=>{
+    if(!dial.tracking) return;
+    const ang=dialAngle(e,pad), now=Date.now();
+    const changed=dialApply(ang-dial.lastAng, now-dial.lastT);
+    if(changed){ dialTick(); $('dialCount').textContent=dial.count; }
+    $('dialDot').style.transform='translateX(-50%) rotate(0deg)';
+    const rad=(ang+90)*Math.PI/180;
+    $('dialDot').style.left=(50+46*Math.sin(rad))+'%';
+    $('dialDot').style.top=(calcDotTop(ang))+'%';
+    dial.lastAng=ang; dial.lastT=now;
+  });
+  const stop=()=>{ dial.tracking=false; pad.classList.remove('active'); };
+  pad.addEventListener('pointerup',stop);
+  pad.addEventListener('pointercancel',stop);
+  $('dlLog').addEventListener('click',()=>{
+    if(!dial.count) return;
+    logSet(dial.ex.n, dial.count);
+    const e=todaySetsFor(dial.ex.n);
+    const total=e.r.reduce((a,b)=>a+b,0);
+    setPartial(dial.card, dial.ex, Math.min(total, dial.ex.val), true);
+    dial.count=0; dial.acc=0;
+    dialTick();
+    dialRender();
+  });
+  $('dlClose').addEventListener('click',closeDial);
+})();
+function calcDotTop(ang){
+  const rad=(ang+90)*Math.PI/180;
+  return 50-46*Math.cos(rad);
 }
 
 function openSheet(ex){
@@ -532,7 +877,7 @@ function openSheet(ex){
 }
 function closeSheet(){$('sheet').classList.remove('open');$('sheetBack').classList.remove('open');}
 $('shClose').addEventListener('click',closeSheet);
-$('sheetBack').addEventListener('click',closeSheet);
+$('sheetBack').addEventListener('click',()=>{ closeSheet(); closeDial(); });
 
 function renderAll(){
   buildWorkout();
@@ -576,9 +921,25 @@ $('shuffleBtn').addEventListener('click', async ()=>{
   await saveState(); renderAll();
 });
 $('completeBtn').addEventListener('click', async ()=>{
+  const marking = !state.done[today];
   if(state.done[today]) delete state.done[today];
   else state.done[today]=true;
+  let notes=[];
+  if(marking) notes=runCalibration();
   await saveState(); renderAll();
+  const tn=$('tuneNote');
+  if(marking && notes.length){
+    tn.textContent='Tuned for next time: '+notes.join(', ');
+    tn.style.display='block';
+  } else {
+    tn.style.display='none';
+  }
+  /* served from the ESP? append a line to its SD-card logbook (fire-and-forget) */
+  try{
+    if(/\.local$/.test(location.hostname)){
+      fetch('/log?event='+(marking?'day_complete':'day_undone')+'&day='+today).catch(()=>{});
+    }
+  }catch(e){}
 });
 
 /* ---------- boot ---------- */
@@ -596,6 +957,14 @@ window.addEventListener('unhandledrejection', e=>showErr('Async: '+(e.reason && 
   try{
     await loadState();
     renderAll();
+    if(!state.seenIntro){
+      $('introCard').style.display='block';
+      $('introDismiss').addEventListener('click',async ()=>{
+        $('introCard').style.display='none';
+        state.seenIntro=true;
+        await saveState();
+      });
+    }
   }catch(err){
     showErr((err && err.message) || String(err));
   }
